@@ -8,6 +8,9 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
+import { error } from "console";
+import mongodb from "mongodb";
+import { register } from "./controllers/auth.js";
 
 /* CONFIGURATION */
 const __filename = fileURLToPath(import.meta.url);
@@ -18,8 +21,8 @@ app.use(express.json());
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
-app.use(bodyParser.json({ limit: "30mb", extended: true }));
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+app.use(bodyparser.json({ limit: "30mb", extended: true }));
+app.use(bodyparser.urlencoded({ limit: "30mb", extended: true }));
 app.use(cors());
 app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 
@@ -32,3 +35,20 @@ const Storege = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
+
+const upload = multer({ Storege });
+
+//Routes with files
+app.post("/auth/register", upload.single("Picture"), register);
+
+//MONGOOSE SetUp
+const PORT = process.env.PORT || 6001;
+mongoose
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    app.listen(PORT, () => console.log(`SERVER IS STARTED :  ${PORT}`));
+  })
+  .catch((error) => console.log(`${error} did Not Connect`));
